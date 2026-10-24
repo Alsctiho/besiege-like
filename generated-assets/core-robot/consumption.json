@@ -1,0 +1,33 @@
+{
+  "method": "Blender 本地程序化建模，Cycles GPU 渲染",
+  "cloud_3d_generation_calls": 0,
+  "cloud_3d_generation_credits": 0,
+  "conversation_token_usage": null,
+  "conversation_billing": null,
+  "billing_note": "无法从当前工具读取会话 Token 或费用账单；本机计算和电力不等于零成本",
+  "observed_work_start": "2026-10-24T16:50:30.8095789+08:00",
+  "observed_final_review_time": "2026-10-24T16:58:04.4521268+08:00",
+  "blender_successful_process_wall_seconds": [17.54, 14.53, 14.66],
+  "blender_successful_process_wall_total_seconds": 46.73,
+  "rendered_images_including_revisions": 9,
+  "final_delivered_images": 3,
+  "gpu_render_total_seconds": 27.634,
+  "final_rebuild_script_seconds": 12.719,
+  "model_triangles": 13488,
+  "core_triangles": 5668,
+  "flight_module_including_rotor_triangles": 1044,
+  "mesh_objects": 8,
+  "material_types": 8,
+  "gltf_material_primitives": 33,
+  "texture_images": 0,
+  "blend_bytes": 234656,
+  "glb_bytes": 926096,
+  "validation": {
+    "glb_reimport": "passed",
+    "triangle_count_preserved": true,
+    "six_socket_positions_and_outward_directions": "passed",
+    "independent_rotor_parent_and_pivot": "passed",
+    "visual_review": "passed"
+  },
+  "scope": "精细展示样件，独立模型层级；尚未接入角色控制、碰撞、拾取、战斗、动画或正式 LOD"
+}

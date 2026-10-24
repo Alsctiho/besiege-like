@@ -44,7 +44,7 @@ func _build() -> void:
 	var sim_btn := _btn(hb, "🚀 起飞挑战" if Game.puzzle_mode else "▶ 开始模拟",
 		func() -> void: level.start_sim())
 	sim_btn.add_theme_font_size_override("font_size", 18)
-	_btn(hb, "示例:突击车", func() -> void: level.load_preset("突击车"))
+	_btn(hb, "示例:突击车", func() -> void: level.load_preset(Presets.ASSAULT_CART.name))
 	_btn(hb, "示例:飞行器", func() -> void: level.load_preset("飞行器"))
 	var rev_btn := Button.new()
 	rev_btn.text = "反转前后"

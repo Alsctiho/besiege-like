@@ -1,0 +1,9 @@
+{
+  "drill": 860,
+  "fireball": 776,
+  "blower": 772,
+  "rod": 568,
+  "booster": 776,
+  "build_seconds": 0.493,
+  "source_axis": "Blender +Z -> Godot +Y; mesh origin is connection plug"
+}

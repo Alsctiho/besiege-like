@@ -1,0 +1,84 @@
+{
+  "asset": "K-01 modular core robot",
+  "method": "Local procedural Blender modeling; no cloud generation",
+  "blender": "5.2.3 LTS",
+  "render_engine": "Cycles",
+  "device": "GPU",
+  "build_seconds": 3.542,
+  "glb_export_seconds": 0.132,
+  "render_seconds": {
+    "hero": 3.87,
+    "rear": 3.087,
+    "exploded": 2.171
+  },
+  "total_script_seconds": 12.719,
+  "modules": {
+    "Core": {
+      "vertices": 3000,
+      "polygons": 3166,
+      "triangles": 5668,
+      "material_slots": 6
+    },
+    "Mobility_Module": {
+      "vertices": 616,
+      "polygons": 588,
+      "triangles": 1192,
+      "material_slots": 3
+    },
+    "LeftFront_Wheel": {
+      "vertices": 752,
+      "polygons": 730,
+      "triangles": 1396,
+      "material_slots": 4
+    },
+    "LeftRear_Wheel": {
+      "vertices": 752,
+      "polygons": 730,
+      "triangles": 1396,
+      "material_slots": 4
+    },
+    "RightFront_Wheel": {
+      "vertices": 752,
+      "polygons": 730,
+      "triangles": 1396,
+      "material_slots": 4
+    },
+    "RightRear_Wheel": {
+      "vertices": 752,
+      "polygons": 730,
+      "triangles": 1396,
+      "material_slots": 4
+    },
+    "Flight_Module": {
+      "vertices": 356,
+      "polygons": 338,
+      "triangles": 684,
+      "material_slots": 4
+    },
+    "Rotor": {
+      "vertices": 198,
+      "polygons": 159,
+      "triangles": 360,
+      "material_slots": 4
+    }
+  },
+  "total_triangles": 13488,
+  "total_vertices": 7178,
+  "mesh_objects": 8,
+  "six_sockets": [
+    "Front",
+    "Back",
+    "Right",
+    "Left",
+    "Top",
+    "Bottom"
+  ],
+  "cloud_generation_calls": 0,
+  "files": {
+    "core_robot.blend": 234656,
+    "core_robot.glb": 926096,
+    "hero.png": 1500754,
+    "rear.png": 1488834,
+    "exploded.png": 1404003
+  }
+}

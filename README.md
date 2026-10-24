@@ -1,6 +1,24 @@
-# BesiegeLike 机器拼装沙盒
+# BesiegeLike / 核心漫游
 
-参考 Besiege 与《风之旅人》美术风格的开源 3D 机器拼装沙盒游戏：用方块、轮子、武器和喷射器自由拼装属于你的战争机器，然后驾驶它冲锋、开火、飞行、游泳。
+当前默认入口是 `scenes/core_journey.tscn`：核心方块玩家在巨型高架遗迹中拾取零件，六面装配、独立调整工作朝向，通过钻岩、火球机关和旋翼推进完成旅程。旧机器拼装沙盒保留于 `scenes/main_menu.tscn`。
+
+## 当前原型
+
+- 六面直接触发：左 `Q / ←`、右 `E / →`、上 `↑`、下 `↓`、前 `Z`、后 `X`；别名不重复触发。
+- `WASD` 移动、`F` 拾取、`Tab` 组装、`V` 眺望、`F5 / F9` 保存与恢复；组装中右键拖动环视模型。
+- 安装面决定按键，独立朝向决定作用；支持预览、确认、取消、卸下与净空校验。
+- 窗口按实际分辨率重绘，界面等比例缩放；组装预览随显示像素调整分辨率，使用 4× MSAA。
+- 设计稿在 `docs/design/`；真实 Blender 源工程和生成脚本在 `generated-assets/core-robot/`；正式 GLB 在 `assets/adventure/models/`。
+- 自我验收 Skill 在 `.codebuddy/skills/automate/besiege-self-verify/`，默认旅程套件，旧沙盒用 `--suite sandbox`。
+- 这是一段可玩原型，未完成完整战斗掉落和长篇关卡。
+
+### 本机开发依赖
+
+`addons/godot_mcp/` 是禁止再分发的 Godot MCP Pro 本机插件，未纳入仓库；本机 IDE 路径配置、日志和大体积验收录像也不入库。项目配置保留当前开发环境的插件和三个 MCP Autoload 引用。新机器需自行安装有授权的插件；若只运行游戏、不使用 MCP，应在项目设置移除 `MCPScreenshot`、`MCPInputService`、`MCPGameInspector` 三个 Autoload，并禁用该编辑器插件。游戏本体不依赖它们。
+
+以下为保留的旧沙盒功能说明：
+
+参考 Besiege 与《风之旅人》美术风格的 3D 机器拼装沙盒：自由拼装战争机器并驾驶、飞行、游泳。
 
 ![组件全家福](docs/previews/new_palette_lineup.png)
 

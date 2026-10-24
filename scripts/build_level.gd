@@ -70,15 +70,15 @@ func start_sim() -> void:
 
 
 ## 载入示例机器模板
-func load_preset(name: String) -> void:
-	var preset: Dictionary = Presets.get_preset(name)
+func load_preset(preset_name: String) -> void:
+	var preset: Dictionary = Presets.get_preset(preset_name)
 	if preset.is_empty():
 		ui.show_toast("没有这个示例")
 		return
 	machine.deserialize(preset)
 	clear_undo()
 	ui.hide_binding_panel()
-	ui.show_toast("已载入示例：%s（%d 个组件）" % [name, machine.block_count()])
+	ui.show_toast("已载入示例：%s（%d 个组件）" % [preset_name, machine.block_count()])
 
 
 func undo_count() -> int:

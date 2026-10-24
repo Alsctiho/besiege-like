@@ -6,9 +6,41 @@
 recordings/*.avi
 recordings/*.mp4
 recordings/previews/
+recordings/self_verify/
 *.raw
 .zcode/
 
 # 本地备份文件
 project.godot.bak
 *.bak
+*.blend[0-9]*
+**/__pycache__/
+*.py[cod]
+
+# 本机工具配置与商业 MCP 插件不随仓库分发
+/.vscode/settings.json
+/addons/godot_mcp/
+
+# 日志、下载分镜与生成中间稿；保留导入隔离标记
+/logs/*
+!/logs/.gdignore
+/docs/design/**/generated/
+/generated-images/style-comparison/voxel/
+/generated-images/style-comparison/low-poly/
+/generated-assets/**/*.log
+/generated-assets/**/metrics-first-pass.json
+/generated-assets/**/metrics-second-pass.json
+
+# 仅收录项目验收 Skill，其他 CodeBuddy 本地数据仍忽略
+!/.codebuddy/
+/.codebuddy/*
+!/.codebuddy/skills/
+/.codebuddy/skills/*
+!/.codebuddy/skills/automate/
+/.codebuddy/skills/automate/*
+!/.codebuddy/skills/automate/besiege-self-verify/
+!/.codebuddy/skills/automate/besiege-self-verify/**
+!/.codebuddy/skills-docs/
+/.codebuddy/skills-docs/*
+!/.codebuddy/skills-docs/SKILLS_COMMAND_MAP.md
+/.codebuddy/skills/automate/besiege-self-verify/**/__pycache__/
