@@ -1,0 +1,10 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# 本地验收视频与临时渲染（体积大，不入库）
+recordings/*.avi
+recordings/*.mp4
+recordings/previews/
+*.raw
+.zcode/
