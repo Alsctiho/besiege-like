@@ -1,6 +1,14 @@
 class_name JourneyWorld
 extends Node3D
 
+const CollapseScript = preload("res://scripts/adventure/rock_collapse.gd")
+const BRIDGE_LOWERED := Vector3(0, -8.0, -34.5)
+const BRIDGE_RAISED := Vector3(0, -0.35, -34.5)
+signal bridge_started
+signal bridge_arrived
+var bridge_ready := false
+var collapse: CollapseScript
+
 var bridge: AnimatableBody3D
 var brazier: StaticBody3D
 var blocker: StaticBody3D
@@ -12,6 +20,7 @@ var rock_broken := false
 var completed := false
 var light_material: StandardMaterial3D
 var _time := 0.0
+var _bridge_tween: Tween
 var _sand := JourneyGeometry.material(Color("cdb08c"))
 var _stone := JourneyGeometry.material(Color("a9674c"))
 var _dark := JourneyGeometry.material(Color("755248"))
@@ -25,6 +34,58 @@ func _ready() -> void:
 	_build_route()
 	_build_monuments()
 	_build_interactables()
+	_build_teaching()
+
+func _ground_diagram(name_value: String, location: Vector3, size_value: Vector2, image: Texture2D) -> void:
+	var plane := MeshInstance3D.new()
+	plane.name = name_value
+	var mesh := PlaneMesh.new()
+	mesh.size = size_value
+	plane.mesh = mesh
+	var ink := StandardMaterial3D.new()
+	ink.albedo_texture = image
+	ink.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ink.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	ink.cull_mode = BaseMaterial3D.CULL_DISABLED
+	ink.no_depth_test = false
+	plane.material_override = ink
+	plane.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(plane)
+	plane.position = location
+	plane.set_meta("world_teaching", true)
+
+func _build_teaching() -> void:
+	_ground_diagram("ControlsInStone", Vector3(0, 0.055, 4.8), Vector2(12.4, 6.2), JourneyPictograms.ground_controls())
+	var keys := ["WASD", "F", "Tab", "Q / E", "Z / X", "Space / ↑"]
+	for index in range(6):
+		var label := Label3D.new()
+		label.text = keys[index]
+		label.font_size = 48
+		label.pixel_size = 0.006
+		label.modulate = Color("e8d8b5")
+		label.outline_size = 0
+		label.shaded = false
+		label.render_priority = 2
+		label.rotation.x = -PI / 2
+		add_child(label)
+		label.position = Vector3(-6.2 + (82 + index % 3 * 330) * 12.4 / 1024, 0.061, 1.7 + (76 + int(floorf(float(index) / 3)) * 237) * 6.2 / 512)
+	_ground_diagram("DrillLesson", Vector3(0, 0.056, -5.3), Vector2(11.6, 5.08), JourneyPictograms.lesson("drill"))
+	_ground_diagram("HeatLesson", Vector3(0, 0.056, -21.4), Vector2(5.4, 3.6), JourneyPictograms.lesson("fireball"))
+	_ground_diagram("LiftLesson", Vector3(-2, 0.056, -47), Vector2(9.2, 4.0), JourneyPictograms.flight_recipe())
+	_ground_diagram("RodLesson", Vector3(0, 0.057, -25.1), Vector2(5.4, 2.36), JourneyPictograms.lesson("rod"))
+	_receiver_badge(brazier, "lamp", Vector3(0, 1.6, 0))
+	_receiver_badge(switch_body, "hand", Vector3(0, 1.1, 0))
+
+func _receiver_badge(receiver: Node3D, kind: String, location: Vector3) -> void:
+	var badge := Sprite3D.new()
+	badge.name = "ReceiverIcon"
+	badge.texture = JourneyPictograms.texture(kind)
+	badge.pixel_size = 0.006
+	badge.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	badge.shaded = false
+	badge.modulate = Color("ffda90")
+	receiver.add_child(badge)
+	badge.position = location
 
 func _build_environment() -> void:
 	var environment := Environment.new()
@@ -81,7 +142,8 @@ func _build_route() -> void:
 		JourneyGeometry.box(self, Vector3(0, height - 34, z_position), Vector3(3.2, 67, 3.2), _dark)
 		JourneyGeometry.box(self, Vector3(0, height - 2, z_position), Vector3(4.4, 1.1, 4.4), _white)
 	for z_position in [-6.0, -22.0, -46.0, -66.0]:
-		var arch := JourneyGeometry.ring(self, Vector3(0, -6, z_position), 5.4, 1.6, 2.1, _stone, 32)
+		var arch := JourneyGeometry.ring(self, Vector3(0, -8, z_position), 5.4, 1.6, 2.1, _stone, 32)
+		arch.name = "UndersideArch_" + str(int(-z_position))
 		arch.rotation.y = PI / 2
 		JourneyGeometry.box(self, Vector3(0, -13, z_position - 5.4), Vector3(2.5, 16, 2.8), _stone)
 		JourneyGeometry.box(self, Vector3(0, -13, z_position + 5.4), Vector3(2.5, 16, 2.8), _stone)
@@ -129,8 +191,9 @@ func _build_interactables() -> void:
 	JourneyGeometry.box(switch_body, Vector3(0, 0.5, 0.29), Vector3(0.3, 0.3, 0.05), _glow)
 	bridge = AnimatableBody3D.new()
 	bridge.name = "LiftBridge"
+	bridge.sync_to_physics = false
 	add_child(bridge)
-	bridge.position = Vector3(0, -8, -34.5)
+	bridge.position = BRIDGE_LOWERED
 	JourneyGeometry.box(bridge, Vector3.ZERO, Vector3(5.2, 0.7, 13), _white)
 	var collision := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
@@ -142,12 +205,12 @@ func _build_interactables() -> void:
 	add_child(portal)
 	portal.position = Vector3(0, 3, -72)
 	JourneyGeometry.ring(portal, Vector3(0, 2.2, 0), 2.0, 0.15, 0.10, _glow, 32)
-	add_pickup("ruin_drill", "drill", Vector3(-1.5, 0.65, 3.0))
-	add_pickup("ruin_fireball", "fireball", Vector3(1.8, 0.65, -4.0))
-	add_pickup("ruin_rotor", "rotor", Vector3(1.6, 0.65, -19))
-	add_pickup("ruin_rod", "rod", Vector3(-1.5, 0.65, -22))
-	add_pickup("ruin_booster", "booster", Vector3(2, 0.65, -47))
-	add_pickup("ruin_blower", "blower", Vector3(-2, 0.65, -45))
+	add_pickup("ruin_drill", "drill", Vector3(-7.2, 0.65, 3.0))
+	add_pickup("ruin_fireball", "fireball", Vector3(7.2, 0.65, -4.0))
+	add_pickup("ruin_rotor", "rotor", Vector3(1.6, 0.65, -18))
+	add_pickup("ruin_rod", "rod", Vector3(-1.5, 0.65, -18))
+	add_pickup("ruin_booster", "booster", Vector3(5.3, 0.65, -48))
+	add_pickup("ruin_blower", "blower", Vector3(5.3, 0.65, -44))
 	add_pickup("ruin_rotor_second", "rotor", Vector3(2, 3.65, -60))
 	var wind_body := JourneyGeometry.box(self, Vector3(-3.2, 0.8, -43), Vector3(0.8, 0.8, 0.8), _sand, true)
 	wind_body.name = "WindCube"
@@ -190,22 +253,58 @@ func take_pickup(identifier: String, loadout: JourneyLoadout) -> bool:
 func activate_bridge() -> void:
 	if bridge_active: return
 	bridge_active = true
+	bridge_ready = false
 	light_material.albedo_color = Color("ffdba2")
 	light_material.emission = Color("ffc675")
 	light_material.emission_energy_multiplier = 2.5
-	var tween := create_tween()
-	tween.tween_property(bridge, "position:y", -0.35, 2.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_bridge_tween = create_tween().set_process_mode(Tween.TWEEN_PROCESS_PHYSICS)
+	_bridge_tween.tween_property(bridge, "position", BRIDGE_RAISED, 2.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_bridge_tween.tween_callback(_bridge_finished)
+	bridge_started.emit()
 
-func interact(body: Node, kind: String) -> bool:
+func _bridge_finished() -> void:
+	bridge_ready = true
+	bridge_arrived.emit()
+
+func restore_progress(data: Dictionary, owned_items: Dictionary) -> void:
+	if _bridge_tween != null and _bridge_tween.is_valid(): _bridge_tween.kill()
+	_bridge_tween = null
+	if is_instance_valid(collapse):
+		remove_child(collapse)
+		collapse.queue_free()
+	collapse = null
+	rock_broken = bool(data.get("rock_broken", false))
+	blocker.visible = not rock_broken
+	blocker.collision_layer = 0 if rock_broken else 1
+	bridge_active = bool(data.get("bridge_active", false))
+	bridge.sync_to_physics = false
+	bridge.position = BRIDGE_RAISED if bridge_active else BRIDGE_LOWERED
+	bridge.reset_physics_interpolation()
+	bridge_ready = bridge_active
+	light_material.albedo_color = Color("ffdba2") if bridge_active else Color("a35f38")
+	light_material.emission = Color("ffc675") if bridge_active else Color("a35f38")
+	light_material.emission_energy_multiplier = 2.5 if bridge_active else 0.2
+	completed = bool(data.get("completed", false))
+	for identifier: String in pickups:
+		var taken := owned_items.has(identifier)
+		pickups[identifier].taken = taken
+		pickups[identifier].node.visible = not taken
+
+func interact(body: Node, kind: String, impact_direction := Vector3.FORWARD) -> bool:
 	if body == blocker and kind == "drill" and not rock_broken:
 		rock_broken = true
 		blocker.collision_layer = 0
 		blocker.visible = false
+		collapse = CollapseScript.new()
+		collapse.name = "RockCollapse"
+		add_child(collapse)
+		collapse.global_transform = blocker.global_transform
+		collapse.build(Vector3(5.9, 2.4, 0.75), _dark, impact_direction)
 		return true
-	if body == brazier and kind == "fireball":
+	if body == brazier and kind == "fireball" and not bridge_active:
 		activate_bridge()
 		return true
-	if body == switch_body and kind == "rod":
+	if body == switch_body and kind == "rod" and not bridge_active:
 		activate_bridge()
 		return true
 	if body.get_meta("interaction", "") == "blower" and kind == "blower":

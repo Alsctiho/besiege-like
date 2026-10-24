@@ -3,6 +3,9 @@ extends CanvasLayer
 
 signal save_requested
 signal load_requested
+signal restart_requested
+var journey_menu: Control
+var _menu_was_paused := false
 var player: JourneyPlayer
 var world: JourneyWorld
 var root: Control
@@ -16,7 +19,16 @@ var draft := JourneyLoadout.new()
 var selected_face := "top"
 var selected_direction := "top"
 var selected_item := ""
-var inventory_list: VBoxContainer
+var inventory_list: GridContainer
+var slot_icons: Dictionary = {}
+var slot_cards: Dictionary = {}
+var equipment_strip: Control
+var lesson_image: TextureRect
+var ghost: Node3D
+var ghost_valid := false
+var ghost_error := ""
+var _ghost_material: StandardMaterial3D
+var _invalid_material: StandardMaterial3D
 var description: Label
 var viewport: SubViewport
 var preview_container: TextureRect
@@ -26,8 +38,8 @@ var face_buttons: Dictionary = {}
 var direction_buttons: Dictionary = {}
 var _toast_left := 0.0
 var _paper := Color("e7dfcc")
-var _ink := Color("28363a")
-var _accent := Color("84c7b8")
+var _ink := Color("675344")
+var _accent := Color("b6aa83")
 
 func _ready() -> void:
 	name = "HUD"
@@ -47,27 +59,31 @@ func _ready() -> void:
 	theme.set_color("font_pressed_color", "Button", Color.WHITE)
 	theme.set_color("font_color", "Label", _paper)
 	root.theme = theme
-	var chapter_panel := PanelContainer.new()
-	chapter_panel.position = Vector2(28, 22)
-	chapter_panel.add_theme_stylebox_override("panel", _style(Color(0.12, 0.15, 0.16, 0.82), Color("867f6a")))
-	root.add_child(chapter_panel)
-	var chapter := VBoxContainer.new()
+	var chapter_panel := _paper_panel(root)
+	chapter_panel.position = Vector2(24, 20)
+	var chapter := HBoxContainer.new()
 	chapter_panel.add_child(chapter)
-	_label(chapter, "核 心 漫 游", 26)
-	_label(chapter, "01  /  风蚀高架", 16)
-	objective = _label(chapter, "寻找遗迹中的组件", 17)
-	objective.modulate = Color("c7c9b8")
+	_icon(chapter, "gate", Vector2(32, 32))
+	objective = _label(chapter, "风蚀高架", 18)
+	objective.add_theme_color_override("font_color", _ink)
+	var menu_button := _button(chapter, "旅程 / Esc", open_journey_menu)
+	menu_button.text = "≡"
+	menu_button.custom_minimum_size = Vector2(34, 32)
 	var bottom := HBoxContainer.new()
 	bottom.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	bottom.position = Vector2(-354, -94)
-	bottom.add_theme_constant_override("separation", 8)
+	bottom.position = Vector2(-249, -80)
+	bottom.add_theme_constant_override("separation", 7)
 	root.add_child(bottom)
+	equipment_strip = bottom
 	for face: String in JourneyCatalog.FACES:
-		var card := PanelContainer.new()
-		card.custom_minimum_size = Vector2(110, 66)
-		card.add_theme_stylebox_override("panel", _style(Color(0.14, 0.18, 0.18, 0.86), Color("867f6a")))
-		bottom.add_child(card)
-		var text := _label(card, "", 14)
+		var card := _paper_panel(bottom)
+		card.custom_minimum_size = Vector2(76, 62)
+		slot_cards[face] = card
+		var content := VBoxContainer.new()
+		card.add_child(content)
+		slot_icons[face] = _icon(content, "empty", Vector2(32, 32))
+		var text := _label(content, str(JourneyCatalog.KEYS[face]), 12)
+		text.add_theme_color_override("font_color", _ink)
 		text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		slot_labels[face] = text
 	hint = Label.new()
@@ -80,13 +96,16 @@ func _ready() -> void:
 	hint.add_theme_constant_override("shadow_offset_x", 1)
 	hint.add_theme_constant_override("shadow_offset_y", 2)
 	root.add_child(hint)
-	var status_panel := PanelContainer.new()
-	status_panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	status_panel.offset_top = -28
-	status_panel.add_theme_stylebox_override("panel", _style(Color(0.10, 0.14, 0.15, 0.85), Color(0.2, 0.25, 0.24, 0.4)))
-	root.add_child(status_panel)
+	var status_panel := _paper_panel(root)
+	status_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	status_panel.offset_left = -118
+	status_panel.offset_right = -24
+	status_panel.offset_top = 20
+	status_panel.offset_bottom = 60
 	status = Label.new()
-	status.add_theme_font_size_override("font_size", 13)
+	status.add_theme_font_size_override("font_size", 14)
+	status.add_theme_color_override("font_color", _ink)
+	status.tooltip_text = "动力恢复 · V 眺望 · F5 保存 / F9 读档"
 	status_panel.add_child(status)
 	toast = Label.new()
 	toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
@@ -98,6 +117,7 @@ func _ready() -> void:
 	toast.add_theme_constant_override("shadow_offset_y", 2)
 	root.add_child(toast)
 	_build_assembly()
+	_build_journey_menu()
 	player.loadout.changed.connect(refresh_status)
 	refresh_status()
 
@@ -123,10 +143,39 @@ func _label(parent: Node, text: String, size := 17) -> Label:
 func _button(parent: Node, text: String, callback: Callable) -> Button:
 	var value := Button.new()
 	value.text = text
+	value.tooltip_text = text
 	value.custom_minimum_size.y = 37
 	value.pressed.connect(callback)
 	parent.add_child(value)
 	return value
+
+func _icon(parent: Node, kind: String, size: Vector2) -> TextureRect:
+	var value := TextureRect.new()
+	value.texture = JourneyPictograms.texture(kind)
+	value.custom_minimum_size = size
+	value.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	value.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	value.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(value)
+	return value
+
+func _paper_panel(parent: Node) -> PanelContainer:
+	var panel := PanelContainer.new()
+	var style := _style(_paper, _ink)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(15)
+	style.shadow_color = Color(0.16, 0.12, 0.08, 0.18)
+	style.shadow_size = 4
+	panel.add_theme_stylebox_override("panel", style)
+	parent.add_child(panel)
+	var grain := TextureRect.new()
+	grain.texture = JourneyPictograms.paper()
+	grain.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	grain.stretch_mode = TextureRect.STRETCH_TILE
+	grain.modulate.a = 0.48
+	grain.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(grain)
+	return panel
 
 func _build_assembly() -> void:
 	assembly = Control.new()
@@ -134,7 +183,7 @@ func _build_assembly() -> void:
 	assembly.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_child(assembly)
 	var dim := ColorRect.new()
-	dim.color = Color(0.055, 0.08, 0.085, 0.95)
+	dim.color = Color(0.22, 0.17, 0.14, 0.24)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	assembly.add_child(dim)
 	var margin := MarginContainer.new()
@@ -146,26 +195,16 @@ func _build_assembly() -> void:
 	assembly.add_child(margin)
 	var outer := VBoxContainer.new()
 	margin.add_child(outer)
-	_label(outer, "核心组装  /  六面接口", 27)
-	_label(outer, "安装面决定按键 · 工作朝向决定作用 · 不切换工具", 16)
+	var header := _paper_panel(outer)
+	var header_row := HBoxContainer.new()
+	header.add_child(header_row)
+	_icon(header_row, "core", Vector2(28, 28))
+	var title := _label(header_row, "自由组装", 23)
+	title.add_theme_color_override("font_color", _ink)
 	var columns := HBoxContainer.new()
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	columns.add_theme_constant_override("separation", 22)
 	outer.add_child(columns)
-	var inventory := PanelContainer.new()
-	inventory.custom_minimum_size.x = 245
-	inventory.add_theme_stylebox_override("panel", _style(_paper, Color("9e8768")))
-	columns.add_child(inventory)
-	var list_container := VBoxContainer.new()
-	inventory.add_child(list_container)
-	var inventory_title := _label(list_container, "零件背包", 22)
-	inventory_title.modulate = _ink
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	list_container.add_child(scroll)
-	inventory_list = VBoxContainer.new()
-	inventory_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(inventory_list)
 	preview_container = TextureRect.new()
 	preview_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	preview_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -176,8 +215,9 @@ func _build_assembly() -> void:
 	viewport = SubViewport.new()
 	viewport.size = Vector2i(480, 480)
 	viewport.own_world_3d = true
+	viewport.transparent_bg = true
 	viewport.msaa_3d = Viewport.MSAA_4X
-	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	preview_container.add_child(viewport)
 	preview_container.texture = viewport.get_texture()
 	preview_container.resized.connect(_update_preview_resolution)
@@ -209,38 +249,124 @@ func _build_assembly() -> void:
 	env.environment.ambient_light_energy = 0.65
 	preview_root.add_child(env)
 	var panel := VBoxContainer.new()
-	panel.custom_minimum_size.x = 330
+	panel.custom_minimum_size.x = 490
+	panel.add_theme_constant_override("separation", 12)
 	columns.add_child(panel)
-	_label(panel, "1  选择安装面", 21)
+	var inventory := _paper_panel(panel)
+	var inventory_content := VBoxContainer.new()
+	inventory.add_child(inventory_content)
+	var inventory_title := _label(inventory_content, "组件", 17)
+	inventory_title.add_theme_color_override("font_color", _ink)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size.y = 80
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	inventory_content.add_child(scroll)
+	inventory_list = GridContainer.new()
+	inventory_list.columns = 5
+	inventory_list.add_theme_constant_override("h_separation", 8)
+	inventory_list.add_theme_constant_override("v_separation", 6)
+	scroll.add_child(inventory_list)
+	var selection := _paper_panel(panel)
+	var selectors := HBoxContainer.new()
+	selectors.add_theme_constant_override("separation", 16)
+	selection.add_child(selectors)
+	var faces := VBoxContainer.new()
+	selectors.add_child(faces)
+	var face_title := _label(faces, "安装位置", 15)
+	face_title.add_theme_color_override("font_color", _ink)
 	var face_grid := GridContainer.new()
 	face_grid.columns = 3
-	panel.add_child(face_grid)
+	faces.add_child(face_grid)
 	for face: String in JourneyCatalog.FACES:
-		face_buttons[face] = _button(face_grid, str(JourneyCatalog.LABELS[face]) + "  " + str(JourneyCatalog.KEYS[face]), _select_face.bind(face))
-	_label(panel, "2  选择工作朝向", 21)
+		var button := _button(face_grid, str(JourneyCatalog.LABELS[face]) + "  " + str(JourneyCatalog.KEYS[face]), _select_face.bind(face))
+		button.text = str(JourneyCatalog.LABELS[face]) + " " + ("Q" if face == "left" else "E" if face == "right" else "␣/↑" if face == "top" else str(JourneyCatalog.KEYS[face]))
+		button.custom_minimum_size = Vector2(66, 35)
+		button.add_theme_font_size_override("font_size", 14)
+		face_buttons[face] = button
+	var directions := VBoxContainer.new()
+	selectors.add_child(directions)
+	var direction_title := _label(directions, "工作朝向", 15)
+	direction_title.add_theme_color_override("font_color", _ink)
 	var direction_grid := GridContainer.new()
 	direction_grid.columns = 3
-	panel.add_child(direction_grid)
+	directions.add_child(direction_grid)
 	for direction: String in JourneyCatalog.FACES:
-		direction_buttons[direction] = _button(direction_grid, "朝" + str(JourneyCatalog.LABELS[direction]), _select_direction.bind(direction))
-	description = _label(panel, "选择背包里的零件", 16)
+		var button := _button(direction_grid, "朝" + str(JourneyCatalog.LABELS[direction]), _select_direction.bind(direction))
+		button.custom_minimum_size = Vector2(55, 35)
+		button.add_theme_font_size_override("font_size", 14)
+		direction_buttons[direction] = button
+	var lesson_panel := _paper_panel(panel)
+	lesson_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var lesson_content := VBoxContainer.new()
+	lesson_panel.add_child(lesson_content)
+	description = _label(lesson_content, "选择组件", 15)
+	description.add_theme_color_override("font_color", _ink)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	description.custom_minimum_size = Vector2(330, 100)
-	_button(panel, "安装到所选面", stage_install)
-	_button(panel, "卸下此面零件", stage_remove)
-	var spacer := Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	panel.add_child(spacer)
-	_button(panel, "确认组装", commit)
-	_button(panel, "取消  /  Tab", cancel)
-	_label(outer, "Q / ← 左    E / → 右    ↑ 上    ↓ 下    Z 前    X 后  |  可同时使用", 16)
+	description.custom_minimum_size = Vector2(460, 32)
+	lesson_image = TextureRect.new()
+	lesson_image.custom_minimum_size = Vector2(420, 148)
+	lesson_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	lesson_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	lesson_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	lesson_content.add_child(lesson_image)
+	var actions := HBoxContainer.new()
+	panel.add_child(actions)
+	var remove := _button(actions, "卸下此面零件", stage_remove)
+	remove.text = "卸下"
+	remove.icon = JourneyPictograms.texture("remove")
+	var confirm := _button(actions, "确认组装", commit)
+	confirm.text = "确认"
+	confirm.icon = JourneyPictograms.texture("check")
+	for button: Button in [remove, confirm]:
+		button.expand_icon = true
+		button.add_theme_constant_override("icon_max_width", 23)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.add_theme_font_size_override("font_size", 15)
+	_ghost_material = _make_ghost_material(Color(0.33, 0.83, 0.74, 0.48))
+	_invalid_material = _make_ghost_material(Color(0.90, 0.34, 0.22, 0.48))
 	assembly.hide()
+
+func _build_journey_menu() -> void:
+	journey_menu = Control.new()
+	journey_menu.name = "JourneyMenu"
+	journey_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.add_child(journey_menu)
+	var dim := ColorRect.new()
+	dim.color = Color(0.12, 0.09, 0.07, 0.48)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	journey_menu.add_child(dim)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	journey_menu.add_child(center)
+	var paper := _paper_panel(center)
+	paper.custom_minimum_size = Vector2(440, 240)
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 14)
+	paper.add_child(content)
+	var title := _label(content, "风蚀高架 · 旅程", 24)
+	title.add_theme_color_override("font_color", _ink)
+	var state := _label(content, "继续会保留已拾取零件和已开启机关。", 16)
+	state.add_theme_color_override("font_color", _ink)
+	_button(content, "继续旅程", close_journey_menu)
+	var restart := _button(content, "重新开始这一关", func() -> void: restart_requested.emit())
+	restart.tooltip_text = "直接重开并自动备份存档，重置零件和机关"
+	journey_menu.hide()
+
+func open_journey_menu() -> void:
+	if assembly.visible: return
+	_menu_was_paused = get_tree().paused
+	journey_menu.show()
+	get_tree().paused = true
+
+func close_journey_menu() -> void:
+	journey_menu.hide()
+	get_tree().paused = _menu_was_paused
 
 func refresh_status() -> void:
 	for face: String in JourneyCatalog.FACES:
 		var kind := player.loadout.kind_at(face)
-		var component := "空接口" if kind.is_empty() else str(JourneyCatalog.DEFINITIONS[kind].name)
-		slot_labels[face].text = str(JourneyCatalog.LABELS[face]) + "  " + str(JourneyCatalog.KEYS[face]) + "\n" + component
+		slot_icons[face].texture = JourneyPictograms.texture("empty" if kind.is_empty() else kind)
+		slot_cards[face].tooltip_text = "%s面 · %s · %s" % [JourneyCatalog.LABELS[face], JourneyCatalog.KEYS[face], "空接口" if kind.is_empty() else JourneyCatalog.DEFINITIONS[kind].name]
 
 func _update_preview_resolution() -> void:
 	if viewport == null or not assembly.visible or preview_container.size.x <= 0 or preview_container.size.y <= 0:
@@ -258,9 +384,14 @@ func open_assembly() -> void:
 		show_toast("先停在安全平台上再组装")
 		return
 	draft.restore(player.loadout.snapshot())
-	selected_item = ""
+	if not draft.items.has(selected_item):
+		selected_item = ""
+	elif not draft.equipped_face(selected_item).is_empty():
+		selected_face = draft.equipped_face(selected_item)
+		selected_direction = draft.direction_at(selected_face)
 	player.assembly_open = true
 	assembly.show()
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	get_tree().paused = true
 	_refresh_editor()
 	call_deferred("_update_preview_resolution")
@@ -268,6 +399,8 @@ func open_assembly() -> void:
 func _select_face(face: String) -> void:
 	selected_face = face
 	selected_direction = draft.direction_at(face)
+	if selected_item.is_empty() and draft.slots.has(face):
+		selected_item = draft.slots[face].id
 	preview_camera.position = Vector3(-2.5 if face == "left" else 2.5, 1.8, 3.3 if face == "back" else -3.3)
 	preview_camera.look_at(Vector3.ZERO)
 	_refresh_editor()
@@ -277,6 +410,8 @@ func _select_direction(direction: String) -> void:
 	_refresh_editor()
 
 func _select_item(identifier: String) -> void:
+	if selected_item != identifier:
+		_remember_candidate()
 	selected_item = identifier
 	_refresh_editor()
 
@@ -288,15 +423,27 @@ func _refresh_editor() -> void:
 		var kind: String = draft.items[identifier]
 		var equipped := draft.equipped_face(identifier)
 		var suffix := " · 背包" if equipped.is_empty() else " · " + str(JourneyCatalog.LABELS[equipped]) + "面"
-		var value := _button(inventory_list, str(JourneyCatalog.DEFINITIONS[kind].icon) + "  " + str(JourneyCatalog.DEFINITIONS[kind].name) + suffix, _select_item.bind(identifier))
+		var value := _button(inventory_list, str(JourneyCatalog.DEFINITIONS[kind].name) + suffix, _select_item.bind(identifier))
+		value.text = ""
+		value.icon = JourneyPictograms.texture(kind)
+		value.expand_icon = true
+		value.add_theme_constant_override("icon_max_width", 46)
+		value.custom_minimum_size = Vector2(78, 65)
+		value.set_meta("item_id", identifier)
 		value.modulate = _accent if selected_item == identifier else Color.WHITE
+		if not equipped.is_empty():
+			value.text = str(JourneyCatalog.LABELS[equipped])
+			value.add_theme_font_size_override("font_size", 12)
 	for face: String in face_buttons:
 		face_buttons[face].modulate = _accent if face == selected_face else Color.WHITE
 	for direction: String in direction_buttons:
 		direction_buttons[direction].modulate = _accent if direction == selected_direction else Color.WHITE
 	var selected_kind: String = str(draft.items.get(selected_item, ""))
-	description.text = "安装面：" + str(JourneyCatalog.LABELS[selected_face]) + "  ·  " + str(JourneyCatalog.KEYS[selected_face]) + "\n工作朝向：" + str(JourneyCatalog.LABELS[selected_direction])
-	if not selected_kind.is_empty(): description.text += "\n" + str(JourneyCatalog.DEFINITIONS[selected_kind].hint)
+	description.text = "选择组件" if selected_kind.is_empty() else "%s  ·  %s面 %s  ·  朝%s" % [JourneyCatalog.DEFINITIONS[selected_kind].name, JourneyCatalog.LABELS[selected_face], JourneyCatalog.KEYS[selected_face], JourneyCatalog.LABELS[selected_direction]]
+	if selected_kind == "rotor" or selected_kind == "booster":
+		description.text += " · 推力向" + JourneyCatalog.thrust_label(selected_kind, selected_direction)
+	lesson_image.texture = JourneyPictograms.lesson(selected_kind) if not selected_kind.is_empty() else JourneyPictograms.texture("core")
+	description.tooltip_text = str(JourneyCatalog.DEFINITIONS[selected_kind].hint) if not selected_kind.is_empty() else "点击组件图标，再选择安装面和工作朝向"
 	for child in preview_root.get_children():
 		if child.has_meta("preview_model"):
 			preview_root.remove_child(child)
@@ -304,42 +451,66 @@ func _refresh_editor() -> void:
 	var model := JourneyGeometry.model("core")
 	model.set_meta("preview_model", true)
 	preview_root.add_child(model)
+	ghost = null
+	ghost_valid = false
+	ghost_error = ""
+	var candidate := JourneyLoadout.new()
+	candidate.restore(draft.snapshot())
+	if not selected_kind.is_empty():
+		ghost_error = candidate.install(selected_face, selected_item, selected_direction)
+		if ghost_error.is_empty(): ghost_error = player.validate_loadout(candidate)
+		ghost_valid = ghost_error.is_empty()
 	for face: String in draft.slots:
+		if not selected_kind.is_empty() and (face == selected_face or draft.slots[face].id == selected_item):
+			continue
 		var module := JourneyGeometry.mounted_module(draft.kind_at(face), face, draft.direction_at(face))
 		model.add_child(module)
-	var axis: Vector3 = JourneyCatalog.AXES[selected_direction]
-	var start: Vector3 = JourneyCatalog.AXES[selected_face] * 0.62
-	var arrow_material := JourneyGeometry.material(_accent, 0, 1.5)
-	var arrow := JourneyGeometry.cylinder(model, start + axis * 0.35, 0.018, 0.6, arrow_material, 8)
-	arrow.basis = JourneyGeometry.orientation_for_normal(axis)
-	var point := MeshInstance3D.new()
-	var cone := CylinderMesh.new()
-	cone.top_radius = 0
-	cone.bottom_radius = 0.065
-	cone.height = 0.16
-	point.mesh = cone
-	point.material_override = arrow_material
-	model.add_child(point)
-	point.position = start + axis * 0.70
-	point.basis = JourneyGeometry.orientation_for_normal(axis)
+	if not selected_kind.is_empty():
+		ghost = JourneyGeometry.mounted_module(selected_kind, selected_face, selected_direction)
+		ghost.name = "InstallationGhost"
+		ghost.set_meta("item_id", selected_item)
+		ghost.set_meta("face", selected_face)
+		ghost.set_meta("direction", selected_direction)
+		model.add_child(ghost)
+		for mesh: MeshInstance3D in ghost.find_children("*", "MeshInstance3D", true, false):
+			mesh.material_override = _ghost_material if ghost_valid else _invalid_material
+			mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if not ghost_valid: description.text = ghost_error
 
-func stage_install() -> void:
-	var message := draft.install(selected_face, selected_item, selected_direction)
-	if not message.is_empty():
-		description.text = message
-		return
-	_refresh_editor()
+func _make_ghost_material(color: Color) -> StandardMaterial3D:
+	var value := StandardMaterial3D.new()
+	value.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	value.albedo_color = color
+	value.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	value.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return value
+
+func _remember_candidate() -> void:
+	if selected_item.is_empty(): return
+	var candidate := JourneyLoadout.new()
+	candidate.restore(draft.snapshot())
+	if not candidate.install(selected_face, selected_item, selected_direction).is_empty(): return
+	if not player.validate_loadout(candidate).is_empty(): return
+	draft.restore(candidate.snapshot())
 
 func stage_remove() -> void:
 	draft.remove(selected_face)
+	selected_item = ""
 	_refresh_editor()
 
 func commit() -> void:
-	var error := player.validate_loadout(draft)
+	var candidate := JourneyLoadout.new()
+	candidate.restore(draft.snapshot())
+	if not selected_item.is_empty():
+		var install_error := candidate.install(selected_face, selected_item, selected_direction)
+		if not install_error.is_empty():
+			description.text = install_error
+			return
+	var error := player.validate_loadout(candidate)
 	if not error.is_empty():
 		description.text = error
 		return
-	player.loadout.restore(draft.snapshot())
+	player.loadout.restore(candidate.snapshot())
 	_close()
 	show_toast("组装完成：按所在面的键使用道具")
 	save_requested.emit()
@@ -349,6 +520,7 @@ func cancel() -> void:
 
 func _close() -> void:
 	assembly.hide()
+	viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	get_tree().paused = false
 	player.assembly_open = false
 	refresh_status()
@@ -358,6 +530,11 @@ func show_toast(message: String) -> void:
 	_toast_left = 3.5
 
 func _input(event: InputEvent) -> void:
+	if journey_menu.visible and event is InputEventKey:
+		if event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE:
+			close_journey_menu()
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventMouseMotion and assembly.visible and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
 		preview_camera.position = preview_camera.position.rotated(Vector3.UP, -event.relative.x * 0.008)
 		preview_camera.look_at(Vector3.ZERO)
@@ -370,22 +547,28 @@ func _input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			KEY_ESCAPE:
 				if assembly.visible: cancel()
+				else: open_journey_menu()
+				get_viewport().set_input_as_handled()
+			KEY_R:
+				if assembly.visible:
+					var index := JourneyCatalog.FACES.find(selected_direction)
+					_select_direction(JourneyCatalog.FACES[(index + 1) % 6])
 			KEY_F5: save_requested.emit()
 			KEY_F9: load_requested.emit()
 
 func _process(delta: float) -> void:
 	_toast_left -= delta
-	toast.visible = _toast_left > 0
-	status.text = "WASD 移动  ·  F 拾取  ·  Tab 组装  ·  V 眺望  ·  F5 保存 / F9 读档  |  动力 %d%%" % int(player.energy * 100)
-	for face: String in slot_labels:
-		slot_labels[face].modulate = _accent if player.active_faces.get(face, false) else Color.WHITE
+	toast.visible = _toast_left > 0 and not assembly.visible
+	status.text = "◈ %d%%" % int(player.energy * 100)
+	equipment_strip.visible = not assembly.visible
+	hint.visible = not assembly.visible
+	objective.get_parent().get_parent().visible = not assembly.visible
+	status.get_parent().visible = not assembly.visible
+	for face: String in slot_icons:
+		slot_cards[face].modulate = Color("b1d4c0") if player.active_faces.get(face, false) else Color.WHITE
 	var nearest := world.nearest_pickup(player.global_position)
-	hint.text = "F  拾取「%s」" % str(JourneyCatalog.DEFINITIONS[world.pickups[nearest].kind].name) if not nearest.is_empty() else ""
-	if world.completed:
-		objective.text = "已穿越风蚀高架 · 下一段旅程尚待展开"
-	elif not world.rock_broken:
-		objective.text = "拾取钻头，朝前安装 · 按所在面的键打开裂岩"
-	elif not world.bridge_active:
-		objective.text = "点燃桥头热能机关，或用伸缩杆触碰开关"
-	else:
-		objective.text = "穿过升降桥 · 将旋翼朝上安装，登上高台"
+	hint.text = "F  ·  %s" % str(JourneyCatalog.DEFINITIONS[world.pickups[nearest].kind].name) if not nearest.is_empty() else ""
+	objective.text = "风蚀高架  /  完成" if world.completed else "风蚀高架"
+	if ghost != null and is_instance_valid(ghost):
+		var tint := Color(0.33, 0.83, 0.74, 0.43 + sin(Time.get_ticks_msec() * 0.003) * 0.07) if ghost_valid else Color(0.90, 0.34, 0.22, 0.48)
+		_ghost_material.albedo_color = tint if ghost_valid else _ghost_material.albedo_color
