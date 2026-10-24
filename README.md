@@ -2,7 +2,7 @@
 
 参考 Besiege 与《风之旅人》美术风格的开源 3D 机器拼装沙盒游戏：用方块、轮子、武器和喷射器自由拼装属于你的战争机器，然后驾驶它冲锋、开火、飞行、游泳。
 
-![组件全家福](recordings/previews/new_palette_lineup.png)
+![组件全家福](docs/previews/new_palette_lineup.png)
 
 ## 技术栈
 

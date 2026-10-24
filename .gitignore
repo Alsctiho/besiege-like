@@ -8,3 +8,7 @@ recordings/*.mp4
 recordings/previews/
 *.raw
 .zcode/
+
+# 本地备份文件
+project.godot.bak
+*.bak
