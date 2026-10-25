@@ -35,7 +35,7 @@ Windows 无头功能测试若创建音频播放器，应使用 `--headless --aud
 1. 用 `get_project_info` 确认连接当前项目，默认主场景为 `res://scenes/core_journey.tscn`。
 2. 通过 `execute_editor_script` 调用 `load("res://scripts/adventure/editor_health.gd").snapshot(get_tree())`；保存时间、PID、项目、可见弹窗标题和文字。可见窗口或资源扫描期间不能声明可运行；无头导入不替代 GUI 检查。
 3. 用 `play_scene(mode="main")` 启动 `/root/CoreJourney`，读取玩家、六槽、库存与机关状态；需要看图时用 `execute_game_script` 将 viewport PNG 保存到本轮目录，避免大 Base64。
-4. 按 F 拾取、Tab 组装；Q/← 左、E/→ 右、↑ 上、↓ 下、Z 前、X 后；键位决定安装面，工作朝向独立。验证别名同时按住不双发、松开一个不停止持续道具，取消预览不改变实机装配。
+4. W/S沿当前车头前进／倒车，A/D向自身左／右打方向；不是世界固定四向行走。F拾取、Tab组装；Q/←左面、E/→右面、Space/↑上面、↓下面、Z前面、X后面；组件键位决定安装面，工作朝向独立。验证别名同时按住不双发、松开一个不停止持续道具，取消预览不改变实机装配。
 5. 本轮完整流程由 `tests/journey_acceptance.tscn` 覆盖：真实走到拾取点、装配、钻岩、火球升桥、水平旋翼加速、同一旋翼改到朝上飞过高差，到达出口。另运行 `tests/journey_data_test.gd` 与 `tests/journey_input_test.gd` 验证六面乘六向和全部按键。
 6. 用 `get_editor_errors(max_lines=1500)` 与 `get_output_log(max_lines=1500)` 交叉检查，保留编辑器故障和脚本错误；当前 GUI 报错不能用独立测试日志的零错误掩盖。旧沙盒已移除，仅验收当前核心旅程，不打开历史记录中的旧场景。
 

@@ -70,24 +70,37 @@ func _run() -> void:
 	player.loadout.install("back", "fixture_rotor", "front")
 	player.loadout.install("bottom", "starter_wheels", "bottom")
 	JourneyGeometry.box(fixture, Vector3(0, -0.65, 0), Vector3(30, 1.3, 30), JourneyGeometry.material(Color.GRAY), true)
-	var moving_keys := [KEY_D, KEY_S, KEY_A, KEY_W]
-	var facing_axes := [Vector3.RIGHT, Vector3.BACK, Vector3.LEFT, Vector3.FORWARD]
-	for index in range(4):
-		player.position = Vector3(0, 0.98, 0)
-		player.velocity = Vector3.ZERO
-		player.yaw_velocity = 0.0
-		_key(moving_keys[index], true)
-		for _frame in range(60): await physics_frame
-		_key(moving_keys[index], false)
-		await process_frame
-		var forward := -player.global_basis.z
-		_check(forward.dot(facing_axes[index]) > 0.98, "orient_to_movement_" + str(index))
-		_check(player.world_axis("back").dot(forward) > 0.999, "equipped_axis_follows_movement_facing_" + str(index))
-		for _frame in range(120): await physics_frame
-		_check(absf(player.yaw_velocity) < 0.001, "ground_steering_inertia_settles_" + str(index))
-		var heading := player.rotation.y
-		for _frame in range(5): await physics_frame
-		_check(absf(angle_difference(heading, player.rotation.y)) < 0.001, "retain_heading_when_stopped_" + str(index))
+	for heading: float in [0.0, PI / 2, PI, -PI / 4]:
+		for key: Key in [KEY_W, KEY_S, KEY_A, KEY_D]:
+			player.position = Vector3(0, 0.98, 0)
+			player.velocity = Vector3.ZERO
+			player.rotation.y = heading
+			player.yaw_velocity = 0.0
+			for _frame in range(30): await physics_frame
+			_check(player.is_on_floor() and player.wheel_grip == 1.0, "drive_fixture_has_real_ground_contact")
+			var start := player.position
+			_key(key, true)
+			await process_frame
+			for _frame in range(30): await physics_frame
+			_key(key, false)
+			await process_frame
+			var displacement := player.position - start
+			var forward := Basis(Vector3.UP, heading) * Vector3.FORWARD
+			var turn := angle_difference(heading, player.rotation.y)
+			var label := str(heading) + "_" + str(key)
+			if key in [KEY_W, KEY_S]:
+				var travel := forward if key == KEY_W else -forward
+				_check(displacement.dot(travel) > 0.5, "body_relative_drive_"+label+" displacement="+str(displacement)+" grip="+str(player.wheel_grip))
+				_check(absf(turn) < 0.001 and absf(displacement.dot(forward.cross(Vector3.UP))) < 0.01, "drive_does_not_snap_to_world_heading_"+label)
+			else:
+				_check(turn > 0.3 if key == KEY_A else turn < -0.3, "body_relative_steering_"+label)
+				_check(Vector2(displacement.x, displacement.z).length() < 0.01, "steering_does_not_strafe_"+label)
+			_check(player.world_axis("back").dot(-player.global_basis.z) > 0.999, "equipment_follows_current_body_"+label)
+			for _frame in range(120): await physics_frame
+			_check(absf(player.yaw_velocity) < 0.001, "ground_steering_inertia_settles_"+label)
+			var stopped_heading := player.rotation.y
+			for _frame in range(5): await physics_frame
+			_check(absf(angle_difference(stopped_heading, player.rotation.y)) < 0.001, "retain_heading_when_stopped_"+label)
 	fixture.queue_free()
 	await process_frame
 	print("JOURNEY_INPUT_COMPLETE checks=", checks, " failures=", failures)

@@ -100,16 +100,13 @@ func _physics_process(delta: float) -> void:
 	_elapsed += delta
 	if assembly_open:
 		return
-	var moving := Vector3.ZERO
-	if Input.is_physical_key_pressed(KEY_W): moving.z -= 1
-	if Input.is_physical_key_pressed(KEY_S): moving.z += 1
-	if Input.is_physical_key_pressed(KEY_A): moving.x -= 1
-	if Input.is_physical_key_pressed(KEY_D): moving.x += 1
+	var throttle := float(Input.is_physical_key_pressed(KEY_W)) - float(Input.is_physical_key_pressed(KEY_S))
+	var steering := float(Input.is_physical_key_pressed(KEY_A)) - float(Input.is_physical_key_pressed(KEY_D))
 	rotation.y = wrapf(rotation.y + yaw_velocity * delta, -PI, PI)
+	var moving := -global_basis.z * throttle
 	var steering_acceleration := 0.0
-	if not moving.is_zero_approx():
-		var facing_yaw := atan2(-moving.x, -moving.z)
-		steering_acceleration = angle_difference(rotation.y, facing_yaw) * 120.0 - yaw_velocity * 20.0
+	if not is_zero_approx(steering):
+		steering_acceleration = (steering * 1.8 - yaw_velocity) * 12.0
 	component_forces.clear()
 	total_component_force = Vector3.ZERO
 	total_component_torque = Vector3.ZERO

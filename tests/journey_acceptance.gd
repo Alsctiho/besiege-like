@@ -87,10 +87,9 @@ func _run() -> void:
 	if not await _walk(Vector3(0, 0, -9.4)):
 		_finish()
 		return
-	_key(KEY_W, true)
-	await _hold(0.25)
-	_key(KEY_W, false)
-	await _hold(0.2)
+	if not await _aim(Vector3.FORWARD):
+		_finish()
+		return
 	_check((-level.player.global_basis.z).dot(Vector3.FORWARD) > 0.98, "face_barrier_after_side_pickup")
 	_key(KEY_Q, true)
 	await _hold(0.22)
@@ -114,6 +113,9 @@ func _run() -> void:
 	_click("朝后")
 	_click("确认组装")
 	_check(level.player.loadout.direction_at("right") == "back", "right_rotor_rear_axis_for_forward_thrust")
+	if not await _aim(Vector3.FORWARD):
+		_finish()
+		return
 	_key(KEY_E, true)
 	await _hold(0.5)
 	var right_count: int = level.player.trigger_counts.get("right", 0)
@@ -151,11 +153,10 @@ func _run() -> void:
 	if not await _walk(Vector3(1.3, 0, -24.5)):
 		_finish()
 		return
-	_key(KEY_W, true)
-	await _hold(0.25)
-	_key(KEY_W, false)
-	await _hold(0.2)
-	_check((-level.player.global_basis.z).dot(Vector3.FORWARD) > 0.98, "face_receiver_by_real_movement", {"position":level.player.position,"forward":-level.player.global_basis.z})
+	if not await _aim(Vector3.FORWARD):
+		_finish()
+		return
+	_check((-level.player.global_basis.z).dot(Vector3.FORWARD) > 0.98, "face_receiver_by_real_steering", {"position":level.player.position,"forward":-level.player.global_basis.z})
 	_key(KEY_Z, true)
 	await _hold(0.5)
 	_key(KEY_Z, false)
@@ -177,10 +178,9 @@ func _run() -> void:
 	_click("后  X")
 	_click("朝后")
 	_click("确认组装")
-	_key(KEY_W, true)
-	await _hold(0.2)
-	_key(KEY_W, false)
-	await _hold(0.25)
+	if not await _aim(Vector3.FORWARD):
+		_finish()
+		return
 	var wind_start := level.player.position
 	_key(KEY_X, true)
 	await _hold(0.8)
@@ -210,10 +210,9 @@ func _run() -> void:
 	if not await _walk(Vector3(0, 0, -48.7)):
 		_finish()
 		return
-	_key(KEY_W, true)
-	await _hold(0.2)
-	_key(KEY_W, false)
-	await _hold(0.35)
+	if not await _aim(Vector3.FORWARD):
+		_finish()
+		return
 	var start_height := level.player.position.y
 	_key(KEY_SPACE, true)
 	await _hold(1.0)
@@ -276,24 +275,49 @@ func _verify_world_layout() -> void:
 		_check(clear, "decorative_arch_below_deck_" + str(node.name))
 
 func _walk(target: Vector3) -> bool:
-	for _index in range(900):
+	for _index in range(1200):
 		var position := level.player.position
 		var difference := Vector2(target.x - position.x, target.z - position.z)
-		if difference.length() < 0.30 and level.player.is_on_floor() and absf(position.y - (target.y + 0.97)) < 0.5:
-			_key(KEY_W, false)
-			_key(KEY_S, false)
-			_key(KEY_A, false)
-			_key(KEY_D, false)
+		var speed := Vector2(level.player.velocity.x, level.player.velocity.z).length()
+		if difference.length() < 0.30 and speed < 0.3 and level.player.is_on_floor() and absf(position.y - (target.y + 0.97)) < 0.5:
+			for key: Key in [KEY_W, KEY_S, KEY_A, KEY_D]: _key(key, false)
 			await _hold(0.15)
 			_check(true, "walk_" + str(target))
 			return true
-		_key(KEY_W, difference.y < -0.12)
-		_key(KEY_S, difference.y > 0.12)
-		_key(KEY_A, difference.x < -0.12)
-		_key(KEY_D, difference.x > 0.12)
+		var angle := _steer_toward(Vector3(difference.x, 0, difference.y))
+		_key(KEY_W, absf(angle) < 0.20 and difference.length() > 0.18 + speed * speed / 20.0)
+		_key(KEY_S, false)
 		await get_tree().process_frame
-	_check(false, "walk_timeout_" + str(target), level.player.position)
+	for key: Key in [KEY_W, KEY_S, KEY_A, KEY_D]: _key(key, false)
+	_check(false, "walk_timeout_" + str(target), {"position":level.player.position,"heading":level.player.rotation.y})
 	return false
+
+func _steer_toward(direction: Vector3) -> float:
+	var heading := atan2(-direction.x, -direction.z)
+	var angle := angle_difference(level.player.rotation.y, heading)
+	var prediction := angle - level.player.yaw_velocity * 0.16
+	_key(KEY_A, prediction > 0.045)
+	_key(KEY_D, prediction < -0.045)
+	return angle
+
+func _aim(direction: Vector3) -> bool:
+	_key(KEY_W, false)
+	_key(KEY_S, false)
+	var heading := atan2(-direction.x, -direction.z)
+	for _index in range(300):
+		var angle := angle_difference(level.player.rotation.y, heading)
+		var stopping_error := angle - level.player.yaw_velocity * 0.24
+		if absf(stopping_error) < 0.025:
+			_key(KEY_A, false)
+			_key(KEY_D, false)
+			await _hold(0.8)
+			if absf(angle_difference(level.player.rotation.y, heading)) < 0.045 and absf(level.player.yaw_velocity) < 0.1:
+				return _check(true, "face_target_with_body_relative_steering", -level.player.global_basis.z)
+		else:
+			_key(KEY_A, stopping_error > 0.0)
+			_key(KEY_D, stopping_error < 0.0)
+		await get_tree().process_frame
+	return _check(false, "aim_timeout", {"heading":level.player.rotation.y,"yaw_velocity":level.player.yaw_velocity})
 
 func _key(key: Key, pressed: bool) -> void:
 	if Input.is_physical_key_pressed(key) == pressed: return

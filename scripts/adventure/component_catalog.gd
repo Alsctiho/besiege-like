@@ -7,7 +7,7 @@ const KEYS := {"front": "Z", "back": "X", "left": "Q / ←", "right": "E / →",
 const AXES := {"front": Vector3.FORWARD, "back": Vector3.BACK, "left": Vector3.LEFT, "right": Vector3.RIGHT, "top": Vector3.UP, "bottom": Vector3.DOWN}
 const MODELS := "res://assets/adventure/models/"
 const DEFINITIONS := {
-	"wheel": {"name": "轮足", "icon": "◎", "color": Color("a1b4b1"), "hint": "抓地时 WASD 驱动；离地仅空转，飞行需其它推进组件", "model": "mobility.glb"},
+	"wheel": {"name": "轮足", "icon": "◎", "color": Color("a1b4b1"), "hint": "抓地时 W/S 沿车头前进倒车，A/D 左右打方向；离地仅空转，飞行需其它推进组件", "model": "mobility.glb"},
 	"rotor": {"name": "旋翼", "icon": "✣", "color": Color("a9cec4"), "hint": "水平反向推进、朝上升空；偏心推力会转向，双侧反向可自转", "model": "rotor.glb"},
 	"drill": {"name": "钻头", "icon": "◆", "color": Color("b8bac5"), "hint": "持续按住触发键，钻开接触方向的裂岩", "model": "drill.glb"},
 	"fireball": {"name": "火球", "icon": "●", "color": Color("efb174"), "hint": "按下触发键发射；可点燃热能机关", "model": "fireball.glb"},
