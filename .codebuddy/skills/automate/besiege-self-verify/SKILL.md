@@ -26,6 +26,8 @@ description: 对 besiege-like 项目执行 Godot 自我验证、自动验收、�
 
 脚本只依赖 Python 标准库。先在 Godot 中打开并导入项目，确保 `.godot/global_script_class_cache.cfg` 存在。路径不同可传 `--godot`、`--ffmpeg`、`--ffprobe`；不要重新安装已有软件。
 
+Windows 无头功能测试若创建音频播放器，应使用 `--headless --audio-driver WASAPI` 或真实渲染进程。默认 Dummy 音频驱动可能不清理挂起的 OGG 播放对象，退出泄漏会只写 stderr；需同时扫描引擎日志、stdout 和 stderr。不能关闭音频或忽略退出警告来制造通过。纯错误探针不创建播放器，可以继续用默认无头模式。
+
 ## 1. 原生 MCP 快验收
 
 先获取所需 MCP 工具的真实 schema，再调用。所有游戏工具顺序执行：不同命令共用 `user://mcp_game_request` / `mcp_game_response`，不能并发。
@@ -35,7 +37,7 @@ description: 对 besiege-like 项目执行 Godot 自我验证、自动验收、�
 3. 用 `play_scene(mode="main")` 启动 `/root/CoreJourney`，读取玩家、六槽、库存与机关状态；需要看图时用 `execute_game_script` 将 viewport PNG 保存到本轮目录，避免大 Base64。
 4. 按 F 拾取、Tab 组装；Q/← 左、E/→ 右、↑ 上、↓ 下、Z 前、X 后；键位决定安装面，工作朝向独立。验证别名同时按住不双发、松开一个不停止持续道具，取消预览不改变实机装配。
 5. 本轮完整流程由 `tests/journey_acceptance.tscn` 覆盖：真实走到拾取点、装配、钻岩、火球升桥、水平旋翼加速、同一旋翼改到朝上飞过高差，到达出口。另运行 `tests/journey_data_test.gd` 与 `tests/journey_input_test.gd` 验证六面乘六向和全部按键。
-6. 用 `get_editor_errors(max_lines=1500)` 与 `get_output_log(max_lines=1500)` 交叉检查，保留编辑器故障和脚本错误；当前 GUI 报错不能用独立测试日志的零错误掩盖。旧车辆流程仍可打开 `res://scenes/main_menu.tscn`，录像回归用 `--suite sandbox`。
+6. 用 `get_editor_errors(max_lines=1500)` 与 `get_output_log(max_lines=1500)` 交叉检查，保留编辑器故障和脚本错误；当前 GUI 报错不能用独立测试日志的零错误掩盖。旧沙盒已移除，仅验收当前核心旅程，不打开历史记录中的旧场景。
 
 需要验证工具自身时，参考 `references/verified-run.md` 的正反例。测试摘要和汇总报告都必须拒绝无效输入与节点等待超时。反例结果是预期失败，不能混入最终正例报告后声称全部通过。先保存结果，再开启干净的新运行。
 
@@ -60,7 +62,7 @@ description: 对 besiege-like 项目执行 Godot 自我验证、自动验收、�
 脚本自动创建新的 `recordings/self_verify/<时间戳>/`，拒绝覆盖现有输出目录，完成：
 
 1. 在独立进程运行 `assets/error_probe.gd`。故意 `push_error` 后 `quit(0)`，证明真实错误能被完整日志检出，即使 Godot 返回零退出码。探针日志单独保存。
-2. 默认 `--suite adventure` 使用 `tests/journey_acceptance.tscn`，以 `--journey-verify` 隔离玩家存档；按真实输入和按钮回调完成六面装配、拾取、钻岩、机关、飞行和到达出口。`--suite sandbox` 保留旧 `assets/self_verify.tscn` 的车辆回归。
+2. 使用 `tests/journey_acceptance.tscn`，以 `--journey-verify` 隔离玩家存档；按真实输入和按钮回调完成六面装配、拾取、钻岩、机关、飞行和到达出口。脚本仅支持当前旅程，历史车辆夹具不再是可执行入口。
 3. 严格检查库存守恒、真实装配提交、取消恢复、别名键去重、实际推力方向、机关状态与玩家自行通过路线，保存 `game-report.json` 及六张全分辨率 PNG。失败保留新目录；若组装被墙体净空校验拒绝，应移动到安全平台，而不是禁用碰撞检查。
 4. 使用 Godot `--write-movie`、固定 30 FPS、1152×648 真渲染录制 AVI。不要使用 `--headless` 录正式画面；无头模式仅用于隔离错误探针。
 5. 使用 FFmpeg 编码 H.264 MP4，并用 FFprobe 检查视频流、时长和尺寸。由编码后的 MP4 均匀抽取十二帧生成 `video-contact-sheet.png`。

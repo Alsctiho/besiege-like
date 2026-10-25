@@ -27,8 +27,6 @@ project.godot.bak
 /logs/*
 !/logs/.gdignore
 /docs/design/**/generated/
-/generated-images/style-comparison/voxel/
-/generated-images/style-comparison/low-poly/
 /generated-assets/**/*.log
 /generated-assets/**/metrics-first-pass.json
 /generated-assets/**/metrics-second-pass.json

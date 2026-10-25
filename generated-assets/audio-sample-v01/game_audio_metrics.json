@@ -1,0 +1,155 @@
+{
+  "original_music_unchanged": true,
+  "sfx_changes": "Reduced harsh high-frequency noise and softened one-shot attack; runtime mixing provides additional gain control.",
+  "generation_seconds": 2.045,
+  "sfx": [
+    {
+      "file": "assets\\adventure\\audio\\sfx\\blower_loop.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\blower_loop.wav",
+      "low_pass_hz": 2200,
+      "loop": true,
+      "bytes": 11030
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\booster_loop.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\booster_loop.wav",
+      "low_pass_hz": 1400,
+      "loop": true,
+      "bytes": 9908
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\booster_start.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\booster_start.wav",
+      "low_pass_hz": 1400,
+      "loop": false,
+      "bytes": 6189
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\booster_stop.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\booster_stop.wav",
+      "low_pass_hz": 1400,
+      "loop": false,
+      "bytes": 6265
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\bridge_arrived.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\bridge_arrived.wav",
+      "low_pass_hz": 1400,
+      "loop": false,
+      "bytes": 8196
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\bridge_move_loop.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\bridge_move_loop.wav",
+      "low_pass_hz": 1400,
+      "loop": true,
+      "bytes": 11911
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\bridge_start.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\bridge_start.wav",
+      "low_pass_hz": 1400,
+      "loop": false,
+      "bytes": 7505
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\drill_contact.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\drill_contact.wav",
+      "low_pass_hz": 2200,
+      "loop": false,
+      "bytes": 9215
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\drill_loop.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\drill_loop.wav",
+      "low_pass_hz": 2200,
+      "loop": true,
+      "bytes": 11559
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\drill_start.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\drill_start.wav",
+      "low_pass_hz": 2200,
+      "loop": false,
+      "bytes": 6329
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\equip.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\equip.wav",
+      "low_pass_hz": 4000,
+      "loop": false,
+      "bytes": 5682
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\pickup.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\pickup.wav",
+      "low_pass_hz": 4000,
+      "loop": false,
+      "bytes": 10300
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\rock_collapse.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\rock_collapse.wav",
+      "low_pass_hz": 2200,
+      "loop": false,
+      "bytes": 15228
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\rotor_loop.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\rotor_loop.wav",
+      "low_pass_hz": 1400,
+      "loop": true,
+      "bytes": 11124
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\rotor_start.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\rotor_start.wav",
+      "low_pass_hz": 1400,
+      "loop": false,
+      "bytes": 6481
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\rotor_stop.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\rotor_stop.wav",
+      "low_pass_hz": 1400,
+      "loop": false,
+      "bytes": 6501
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\ui_click.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\ui_click.wav",
+      "low_pass_hz": 4000,
+      "loop": false,
+      "bytes": 4428
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\unequip.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\unequip.wav",
+      "low_pass_hz": 4000,
+      "loop": false,
+      "bytes": 6198
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\wheel_landing.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\wheel_landing.wav",
+      "low_pass_hz": 1400,
+      "loop": false,
+      "bytes": 6497
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\wheel_roll_loop.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\wheel_roll_loop.wav",
+      "low_pass_hz": 1400,
+      "loop": true,
+      "bytes": 9480
+    },
+    {
+      "file": "assets\\adventure\\audio\\sfx\\wheel_skid.ogg",
+      "source": "generated-assets\\audio-sample-v01\\sfx\\wheel_skid.wav",
+      "low_pass_hz": 1400,
+      "loop": false,
+      "bytes": 6773
+    }
+  ],
+  "music_bytes": 432406
+}

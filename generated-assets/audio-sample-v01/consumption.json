@@ -1,0 +1,20 @@
+{
+  "started_at": "2026-10-25T19:22:13.908680+08:00",
+  "finished_at": "2026-10-25T19:25:28.251884+08:00",
+  "session_elapsed_seconds": 194.3,
+  "local_synthesis_seconds": 1.529,
+  "local_encoding_seconds": 1.916,
+  "cloud_audio_generation_calls": 0,
+  "sfx_count": 21,
+  "music_seconds": 60,
+  "master_format": "48kHz / 16-bit PCM; mono effects, stereo music",
+  "compressed_audio_bytes": 1444294,
+  "technical_validation": {
+    "wav_checks": 23,
+    "decode_checks": 24,
+    "all_passed": true
+  },
+  "music_integrated_lufs": "-17.86",
+  "billing": "Token and API session costs not accessible; zero cloud generation calls does not mean zero cost.",
+  "scope": "Audition samples only; game code and player progress unchanged. No subjective listening performed."
+}

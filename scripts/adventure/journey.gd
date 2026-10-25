@@ -2,6 +2,8 @@ class_name CoreJourney
 extends Node3D
 
 const SAVE_PATH := "user://core_journey/save_v1.json"
+const AudioScript = preload("res://scripts/adventure/journey_audio.gd")
+var audio: AudioScript
 var player: JourneyPlayer
 var world: JourneyWorld
 var camera: JourneyCamera
@@ -34,6 +36,9 @@ func _ready() -> void:
 	hud.save_requested.connect(save_progress)
 	hud.load_requested.connect(load_progress, CONNECT_DEFERRED)
 	hud.restart_requested.connect(restart_progress, CONNECT_DEFERRED)
+	audio = AudioScript.new()
+	add_child(audio)
+	audio.configure(player, world, camera, hud)
 	world.bridge_started.connect(func() -> void: hud.show_toast("升降桥正在上升 · 前方断口"))
 	world.bridge_arrived.connect(func() -> void: hud.show_toast("升降桥已到位 · 可以通行"))
 	player.respawned.connect(func() -> void: hud.show_toast("已回到最近的安全平台 · 零件保留"))
@@ -48,6 +53,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			var identifier := world.nearest_pickup(player.global_position)
 			if not identifier.is_empty() and world.take_pickup(identifier, player.loadout):
 				collected_count += 1
+				audio.play_at("pickup", world.pickups[identifier].node.global_position, -10.0)
 				hud.show_toast("+ %s" % str(JourneyCatalog.DEFINITIONS[world.pickups[identifier].kind].name))
 				save_progress()
 		if event.physical_keycode == KEY_BACKSPACE:
@@ -64,6 +70,7 @@ func _tool_used(_face: String, kind: String, origin: Vector3, direction: Vector3
 		add_child(node)
 		node.global_position = origin
 		projectiles.append({"node": node, "velocity": direction * 14, "age": 0.0})
+		audio.play_at("booster_start", origin, -17.0, 1.25)
 		return
 	var distance := 3.0 if kind == "rod" else 1.8
 	if kind == "blower": distance = 6.0
@@ -74,6 +81,8 @@ func _tool_used(_face: String, kind: String, origin: Vector3, direction: Vector3
 	var bridge_was_active := world.bridge_active
 	if not result.is_empty() and world.interact(result.collider, kind, direction):
 		if kind == "drill" and _cooldown <= 0:
+			audio.play_at("drill_contact", result.position, -18.0)
+			audio.play_at("rock_collapse", world.blocker.global_position, -12.0)
 			hud.show_toast("裂岩已打开 · 通路就在前方")
 			_cooldown = 1
 			save_progress()

@@ -233,6 +233,11 @@ func _run() -> void:
 		_finish()
 		return
 	_check(level.world.completed, "exit_reached_by_player")
+	_check(level.audio.music.playing, "background_music_keeps_playing_through_journey")
+	_check(level.audio.event_counts.get("pickup", 0) >= 4, "real_pickups_have_audio_feedback")
+	_check(level.audio.event_counts.get("equip", 0) >= 3, "successful_assembly_has_audio_feedback")
+	_check(level.audio.event_counts.get("rock_collapse", 0) == 1, "real_rock_collapse_has_one_sound")
+	_check(level.audio.event_counts.get("bridge_arrived", 0) == 1, "real_bridge_arrival_has_one_sound")
 	await _capture("05-journey-complete.png")
 	await _tap(KEY_TAB)
 	await _capture("06-final-loadout.png")
@@ -347,4 +352,7 @@ func _finish() -> void:
 	file.store_string(JSON.stringify({"all_passed": passed, "checks": checks, "screenshots": screenshots, "frames": _frames, "godot_version": Engine.get_version_info().string}, "\t"))
 	file.close()
 	print("[JOURNEY_VERIFY] COMPLETE all_passed=", passed)
+	if is_instance_valid(level) and is_instance_valid(level.audio):
+		level.audio.shutdown()
+		await get_tree().create_timer(0.2).timeout
 	get_tree().quit(0 if passed else 1)

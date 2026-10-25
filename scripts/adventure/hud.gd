@@ -1,28 +1,28 @@
 class_name JourneyHUD
 extends CanvasLayer
 
+const KeyboardCueScript = preload("res://scripts/adventure/keyboard_cue.gd")
+
 signal save_requested
 signal load_requested
 signal restart_requested
+signal sound_requested(key: String)
+signal volume_requested(kind: String, value: float)
 var journey_menu: Control
 var _menu_was_paused := false
 var player: JourneyPlayer
 var world: JourneyWorld
 var root: Control
-var objective: Label
+var menu_icon: Button
 var hint: Label
 var toast: Label
-var status: Label
-var slot_labels: Dictionary = {}
+var keyboard: KeyboardCueScript
 var assembly: Control
 var draft := JourneyLoadout.new()
 var selected_face := "top"
 var selected_direction := "top"
 var selected_item := ""
 var inventory_list: GridContainer
-var slot_icons: Dictionary = {}
-var slot_cards: Dictionary = {}
-var equipment_strip: Control
 var lesson_image: TextureRect
 var ghost: Node3D
 var ghost_valid := false
@@ -59,36 +59,28 @@ func _ready() -> void:
 	theme.set_color("font_pressed_color", "Button", Color.WHITE)
 	theme.set_color("font_color", "Label", _paper)
 	root.theme = theme
-	var chapter_panel := _paper_panel(root)
-	chapter_panel.position = Vector2(24, 20)
-	var chapter := HBoxContainer.new()
-	chapter_panel.add_child(chapter)
-	_icon(chapter, "gate", Vector2(32, 32))
-	objective = _label(chapter, "风蚀高架", 18)
-	objective.add_theme_color_override("font_color", _ink)
-	var menu_button := _button(chapter, "旅程 / Esc", open_journey_menu)
-	menu_button.text = "≡"
-	menu_button.custom_minimum_size = Vector2(34, 32)
-	var bottom := HBoxContainer.new()
-	bottom.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	bottom.position = Vector2(-249, -80)
-	bottom.add_theme_constant_override("separation", 7)
-	root.add_child(bottom)
-	equipment_strip = bottom
-	for face: String in JourneyCatalog.FACES:
-		var card := _paper_panel(bottom)
-		card.custom_minimum_size = Vector2(76, 62)
-		slot_cards[face] = card
-		var content := VBoxContainer.new()
-		card.add_child(content)
-		slot_icons[face] = _icon(content, "empty", Vector2(32, 32))
-		var text := _label(content, str(JourneyCatalog.KEYS[face]), 12)
-		text.add_theme_color_override("font_color", _ink)
-		text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		slot_labels[face] = text
+	menu_icon = _button(root, "旅程 / Esc", open_journey_menu)
+	menu_icon.name = "JourneyMenuIcon"
+	menu_icon.text = ""
+	menu_icon.icon = JourneyPictograms.texture("gate")
+	menu_icon.expand_icon = true
+	menu_icon.add_theme_constant_override("icon_max_width", 28)
+	menu_icon.position = Vector2(24, 20)
+	menu_icon.size = Vector2(52, 52)
+	var menu_style := _style(_paper, _ink)
+	menu_style.set_corner_radius_all(14)
+	menu_style.set_border_width_all(2)
+	menu_icon.add_theme_stylebox_override("normal", menu_style)
+	keyboard = KeyboardCueScript.new()
+	root.add_child(keyboard)
+	keyboard.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	keyboard.offset_left = -208
+	keyboard.offset_right = -28
+	keyboard.offset_top = 24
+	keyboard.offset_bottom = 126
 	hint = Label.new()
 	hint.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	hint.position = Vector2(-390, -125)
+	hint.position = Vector2(-390, -54)
 	hint.size = Vector2(780, 30)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.add_theme_font_size_override("font_size", 18)
@@ -96,17 +88,6 @@ func _ready() -> void:
 	hint.add_theme_constant_override("shadow_offset_x", 1)
 	hint.add_theme_constant_override("shadow_offset_y", 2)
 	root.add_child(hint)
-	var status_panel := _paper_panel(root)
-	status_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	status_panel.offset_left = -118
-	status_panel.offset_right = -24
-	status_panel.offset_top = 20
-	status_panel.offset_bottom = 60
-	status = Label.new()
-	status.add_theme_font_size_override("font_size", 14)
-	status.add_theme_color_override("font_color", _ink)
-	status.tooltip_text = "动力恢复 · V 眺望 · F5 保存 / F9 读档"
-	status_panel.add_child(status)
 	toast = Label.new()
 	toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	toast.position = Vector2(-350, 106)
@@ -145,6 +126,7 @@ func _button(parent: Node, text: String, callback: Callable) -> Button:
 	value.text = text
 	value.tooltip_text = text
 	value.custom_minimum_size.y = 37
+	value.pressed.connect(func() -> void: sound_requested.emit("ui_click"))
 	value.pressed.connect(callback)
 	parent.add_child(value)
 	return value
@@ -350,7 +332,24 @@ func _build_journey_menu() -> void:
 	_button(content, "继续旅程", close_journey_menu)
 	var restart := _button(content, "重新开始这一关", func() -> void: restart_requested.emit())
 	restart.tooltip_text = "直接重开并自动备份存档，重置零件和机关"
+	_volume_slider(content, "音乐", "music", 72)
+	_volume_slider(content, "音效", "sfx", 70)
 	journey_menu.hide()
+
+func _volume_slider(parent: Node, text: String, kind: String, initial: float) -> void:
+	var row := HBoxContainer.new()
+	parent.add_child(row)
+	var label := _label(row, text, 16)
+	label.add_theme_color_override("font_color", _ink)
+	label.custom_minimum_size.x = 65
+	var slider := HSlider.new()
+	slider.name = "Volume_" + kind
+	slider.max_value = 100
+	slider.step = 1
+	slider.value = initial
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(slider)
+	slider.value_changed.connect(func(value: float) -> void: volume_requested.emit(kind, value / 100.0))
 
 func open_journey_menu() -> void:
 	if assembly.visible: return
@@ -363,10 +362,7 @@ func close_journey_menu() -> void:
 	get_tree().paused = _menu_was_paused
 
 func refresh_status() -> void:
-	for face: String in JourneyCatalog.FACES:
-		var kind := player.loadout.kind_at(face)
-		slot_icons[face].texture = JourneyPictograms.texture("empty" if kind.is_empty() else kind)
-		slot_cards[face].tooltip_text = "%s面 · %s · %s" % [JourneyCatalog.LABELS[face], JourneyCatalog.KEYS[face], "空接口" if kind.is_empty() else JourneyCatalog.DEFINITIONS[kind].name]
+	keyboard.refresh(player.loadout)
 
 func _update_preview_resolution() -> void:
 	if viewport == null or not assembly.visible or preview_container.size.x <= 0 or preview_container.size.y <= 0:
@@ -494,6 +490,7 @@ func _remember_candidate() -> void:
 	draft.restore(candidate.snapshot())
 
 func stage_remove() -> void:
+	if draft.slots.has(selected_face): sound_requested.emit("unequip")
 	draft.remove(selected_face)
 	selected_item = ""
 	_refresh_editor()
@@ -510,7 +507,9 @@ func commit() -> void:
 	if not error.is_empty():
 		description.text = error
 		return
+	var changed := player.loadout.snapshot() != candidate.snapshot()
 	player.loadout.restore(candidate.snapshot())
+	if changed: sound_requested.emit("equip")
 	_close()
 	show_toast("组装完成：按所在面的键使用道具")
 	save_requested.emit()
@@ -559,16 +558,12 @@ func _input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	_toast_left -= delta
 	toast.visible = _toast_left > 0 and not assembly.visible
-	status.text = "◈ %d%%" % int(player.energy * 100)
-	equipment_strip.visible = not assembly.visible
+	keyboard.visible = not assembly.visible
 	hint.visible = not assembly.visible
-	objective.get_parent().get_parent().visible = not assembly.visible
-	status.get_parent().visible = not assembly.visible
-	for face: String in slot_icons:
-		slot_cards[face].modulate = Color("b1d4c0") if player.active_faces.get(face, false) else Color.WHITE
+	menu_icon.visible = not assembly.visible
+	keyboard.update_pressed(not get_tree().paused and not assembly.visible)
 	var nearest := world.nearest_pickup(player.global_position)
 	hint.text = "F  ·  %s" % str(JourneyCatalog.DEFINITIONS[world.pickups[nearest].kind].name) if not nearest.is_empty() else ""
-	objective.text = "风蚀高架  /  完成" if world.completed else "风蚀高架"
 	if ghost != null and is_instance_valid(ghost):
 		var tint := Color(0.33, 0.83, 0.74, 0.43 + sin(Time.get_ticks_msec() * 0.003) * 0.07) if ghost_valid else Color(0.90, 0.34, 0.22, 0.48)
 		_ghost_material.albedo_color = tint if ghost_valid else _ghost_material.albedo_color

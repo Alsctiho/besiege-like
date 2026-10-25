@@ -1,6 +1,7 @@
+import array
 import unittest
 
-from verify_capture import scan_log
+from verify_capture import analyze_audio_pcm, scan_log
 
 
 class LogDetectionTests(unittest.TestCase):
@@ -24,6 +25,19 @@ class LogDetectionTests(unittest.TestCase):
 
     def test_empty_log_has_no_diagnostics(self):
         self.assertEqual(scan_log(""), [])
+
+
+class AudioDetectionTests(unittest.TestCase):
+    def test_missing_and_silent_audio_fail(self):
+        self.assertFalse(analyze_audio_pcm(b"")["passed"])
+        self.assertFalse(analyze_audio_pcm(array.array("f", [0.0] * 100).tobytes())["passed"])
+
+    def test_real_signal_passes(self):
+        self.assertTrue(analyze_audio_pcm(array.array("f", [0.1, -0.1] * 100).tobytes())["passed"])
+
+    def test_clipped_and_invalid_audio_fail(self):
+        self.assertFalse(analyze_audio_pcm(array.array("f", [1.0, -1.0] * 100).tobytes())["passed"])
+        self.assertFalse(analyze_audio_pcm(array.array("f", [float("nan")]).tobytes())["passed"])
 
 
 if __name__ == "__main__":

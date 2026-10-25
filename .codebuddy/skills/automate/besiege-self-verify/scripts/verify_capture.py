@@ -1,4 +1,6 @@
 import argparse
+import array
+import math
 import json
 import os
 import re
@@ -31,6 +33,18 @@ def scan_log(text):
             "context": lines[line_number:min(line_number + 6, len(lines))],
         })
     return records
+
+
+def analyze_audio_pcm(raw):
+    samples = array.array("f")
+    samples.frombytes(raw)
+    if sys.byteorder != "little":
+        samples.byteswap()
+    if not samples or not all(math.isfinite(sample) for sample in samples):
+        return {"passed": False, "reason": "Missing or invalid decoded audio samples"}
+    peak = max(abs(sample) for sample in samples)
+    rms = math.sqrt(sum(sample * sample for sample in samples) / len(samples))
+    return {"passed": rms > 0.001 and peak < 0.99, "samples": len(samples), "peak": peak, "rms": rms}
 
 
 def write_json(path, value):
@@ -99,11 +113,9 @@ def verify(args):
 
         engine_log = output_dir / "godot.log"
         movie_path = output_dir / "acceptance.avi"
-        scene_path = "res://tests/journey_acceptance.tscn" if args.suite == "adventure" else "res://" + (ASSET_ROOT / "self_verify.tscn").relative_to(project_root).as_posix()
-        report["suite"] = args.suite
-        user_args = [f"--verify-output={output_dir.as_posix()}"]
-        if args.suite == "adventure":
-            user_args.append("--journey-verify")
+        scene_path = "res://tests/journey_acceptance.tscn"
+        report["suite"] = "adventure"
+        user_args = [f"--verify-output={output_dir.as_posix()}", "--journey-verify"]
         engine_code = run_process([
             args.godot, "--path", project_root, "--scene", scene_path,
             "--resolution", "1152x648", "--fixed-fps", str(args.fps),
@@ -113,7 +125,13 @@ def verify(args):
         report["engine_exit_code"] = engine_code
         if not engine_log.is_file() or engine_log.stat().st_size == 0:
             raise RuntimeError("Engine log missing or empty; cannot establish an error-free run.")
-        report["diagnostics"] = scan_log(engine_log.read_text(encoding="utf-8", errors="replace"))
+        report["diagnostics"] = []
+        for log_path in [engine_log, output_dir / "godot-console.log"]:
+            if not log_path.is_file() or log_path.stat().st_size == 0:
+                raise RuntimeError(f"Required complete log missing or empty: {log_path}")
+            for record in scan_log(log_path.read_text(encoding="utf-8", errors="replace")):
+                record["source"] = log_path.name
+                report["diagnostics"].append(record)
         if engine_code != 0:
             report["failures"].append(f"Godot exited with code {engine_code}")
         errors = [record for record in report["diagnostics"] if record["severity"] == "error"]
@@ -141,7 +159,7 @@ def verify(args):
         encode_code = run_process([
             args.ffmpeg, "-nostdin", "-n", "-hide_banner", "-loglevel", "error",
             "-i", movie_path, "-c:v", "libx264", "-preset", "fast", "-crf", "20",
-            "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-an", mp4_path,
+            "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-c:a", "aac", "-b:a", "192k", mp4_path,
         ], output_dir / "ffmpeg.log", args.timeout)
         if encode_code != 0:
             raise RuntimeError(f"Video encoding failed with code {encode_code}")
@@ -154,6 +172,19 @@ def verify(args):
         duration = float(report["video"]["format"].get("duration", 0))
         if len(videos) != 1 or duration < 5 or videos[0].get("width") != 1152 or videos[0].get("height") != 648:
             report["failures"].append("Encoded video has unexpected stream, duration or dimensions")
+        if args.suite == "adventure":
+            audio_streams = [stream for stream in report["video"]["streams"] if stream.get("codec_type") == "audio"]
+            if len(audio_streams) != 1:
+                report["failures"].append("Adventure recording must contain one audio stream")
+            else:
+                decoded = subprocess.run([
+                    str(args.ffmpeg), "-nostdin", "-v", "error", "-i", str(mp4_path),
+                    "-vn", "-ac", "1", "-ar", "24000", "-f", "f32le", "pipe:1",
+                ], capture_output=True, check=True, timeout=30)
+                report["audio"] = analyze_audio_pcm(decoded.stdout)
+                write_json(output_dir / "audio-validation.json", report["audio"])
+                if not report["audio"]["passed"]:
+                    report["failures"].append("Recorded audio is silent, clipped or invalid")
         sample_code = run_process([
             args.ffmpeg, "-nostdin", "-n", "-hide_banner", "-loglevel", "error",
             "-i", mp4_path, "-vf", f"fps={12 / duration:.8f},scale=384:216,tile=4x3", "-frames:v", "1", output_dir / "video-contact-sheet.png",
@@ -178,7 +209,7 @@ def main():
     parser.add_argument("--godot", type=Path, default=Path("E:/Godot/Godot_v4.7.2-stable_win64.exe"))
     parser.add_argument("--ffmpeg", type=Path, default=Path("E:/Tools/ffmpeg-9.0.1-essentials_build/bin/ffmpeg.exe"))
     parser.add_argument("--ffprobe", type=Path, default=Path("E:/Tools/ffmpeg-9.0.1-essentials_build/bin/ffprobe.exe"))
-    parser.add_argument("--suite", choices=["adventure", "sandbox"], default="adventure")
+    parser.add_argument("--suite", choices=["adventure"], default="adventure")
     parser.add_argument("--fps", type=int, choices=[30, 60], default=30)
     parser.add_argument("--timeout", type=int, default=240)
     return verify(parser.parse_args())

@@ -1,0 +1,639 @@
+{
+  "all_passed": true,
+  "wav_checks": 23,
+  "compressed_decode_checks": 24,
+  "failures": [],
+  "wav": [
+    {
+      "file": "sfx/rotor_start.wav",
+      "passed": true,
+      "duration_seconds": 0.7,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -16.89,
+      "loop_boundary_delta": null
+    },
+    {
+      "file": "sfx/rotor_loop.wav",
+      "passed": true,
+      "duration_seconds": 2.0,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -14.41,
+      "loop_boundary_delta": 9.1552734375e-05
+    },
+    {
+      "file": "sfx/rotor_stop.wav",
+      "passed": true,
+      "duration_seconds": 0.65,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -20.64,
+      "loop_boundary_delta": null
+    },
+    {
+      "file": "sfx/blower_loop.wav",
+      "passed": true,
+      "duration_seconds": 2.0,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -17.39,
+      "loop_boundary_delta": 0.00018310546875
+    },
+    {
+      "file": "sfx/booster_start.wav",
+      "passed": true,
+      "duration_seconds": 0.55,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -17.39,
+      "loop_boundary_delta": null
+    },
+    {
+      "file": "sfx/booster_loop.wav",
+      "passed": true,
+      "duration_seconds": 1.5,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -16.54,
+      "loop_boundary_delta": 0.003631591796875
+    },
+    {
+      "file": "sfx/booster_stop.wav",
+      "passed": true,
+      "duration_seconds": 0.55,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -24.69,
+      "loop_boundary_delta": null
+    },
+    {
+      "file": "sfx/drill_start.wav",
+      "passed": true,
+      "duration_seconds": 0.45,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -16.03,
+      "loop_boundary_delta": null
+    },
+    {
+      "file": "sfx/drill_loop.wav",
+      "passed": true,
+      "duration_seconds": 1.5,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -15.08,
+      "loop_boundary_delta": 0.0028076171875
+    },
+    {
+      "file": "sfx/drill_contact.wav",
+      "passed": true,
+      "duration_seconds": 1.0,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -21.42,
+      "loop_boundary_delta": null
+    },
+    {
+      "file": "sfx/rock_collapse.wav",
+      "passed": true,
+      "duration_seconds": 2.3,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -29.21,
+      "loop_boundary_delta": null
+    },
+    {
+      "file": "sfx/wheel_roll_loop.wav",
+      "passed": true,
+      "duration_seconds": 2.0,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -20.04,
+      "loop_boundary_delta": 0.00347900390625
+    },
+    {
+      "file": "sfx/wheel_landing.wav",
+      "passed": true,
+      "duration_seconds": 0.7,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -23.99,
+      "loop_boundary_delta": null
+    },
+    {
+      "file": "sfx/wheel_skid.wav",
+      "passed": true,
+      "duration_seconds": 0.65,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -18.97,
+      "loop_boundary_delta": null
+    },
+    {
+      "file": "sfx/pickup.wav",
+      "passed": true,
+      "duration_seconds": 1.6,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -17.79,
+      "loop_boundary_delta": null
+    },
+    {
+      "file": "sfx/equip.wav",
+      "passed": true,
+      "duration_seconds": 0.48,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -21.37,
+      "loop_boundary_delta": null
+    },
+    {
+      "file": "sfx/unequip.wav",
+      "passed": true,
+      "duration_seconds": 0.48,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -21.99,
+      "loop_boundary_delta": null
+    },
+    {
+      "file": "sfx/bridge_start.wav",
+      "passed": true,
+      "duration_seconds": 0.9,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -17.75,
+      "loop_boundary_delta": null
+    },
+    {
+      "file": "sfx/bridge_move_loop.wav",
+      "passed": true,
+      "duration_seconds": 2.0,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -17.11,
+      "loop_boundary_delta": 0.007659912109375
+    },
+    {
+      "file": "sfx/bridge_arrived.wav",
+      "passed": true,
+      "duration_seconds": 1.4,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -23.97,
+      "loop_boundary_delta": null
+    },
+    {
+      "file": "sfx/ui_click.wav",
+      "passed": true,
+      "duration_seconds": 0.12,
+      "peak_dbfs": -5.0,
+      "rms_dbfs": -19.79,
+      "loop_boundary_delta": null
+    },
+    {
+      "file": "preview/sfx_demo.wav",
+      "passed": true,
+      "duration_seconds": 27.6,
+      "peak_dbfs": -3.0,
+      "rms_dbfs": -18.12,
+      "loop_boundary_delta": null
+    },
+    {
+      "file": "music/windworn_viaduct_60s.wav",
+      "passed": true,
+      "duration_seconds": 60.0,
+      "peak_dbfs": -6.0,
+      "rms_dbfs": -19.88,
+      "loop_boundary_delta": 0.0013427734375
+    }
+  ],
+  "compressed": [
+    {
+      "file": "sfx\\blower_loop.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "2.000000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\booster_loop.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "1.500000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\booster_start.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "0.550000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\booster_stop.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "0.550000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\bridge_arrived.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "1.400000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\bridge_move_loop.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "2.000000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\bridge_start.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "0.900000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\drill_contact.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "1.000000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\drill_loop.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "1.500000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\drill_start.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "0.450000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\equip.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "0.480000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\pickup.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "1.600000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\rock_collapse.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "2.300000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\rotor_loop.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "2.000000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\rotor_start.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "0.700000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\rotor_stop.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "0.650000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\ui_click.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "0.120000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\unequip.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "0.480000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\wheel_landing.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "0.700000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\wheel_roll_loop.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "2.000000"
+        }
+      }
+    },
+    {
+      "file": "sfx\\wheel_skid.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "0.650000"
+        }
+      }
+    },
+    {
+      "file": "music\\windworn_viaduct_60s.ogg",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "vorbis",
+            "sample_rate": "48000",
+            "channels": 2
+          }
+        ],
+        "format": {
+          "duration": "60.000000"
+        }
+      }
+    },
+    {
+      "file": "preview\\exploration_music.mp3",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "mp3",
+            "sample_rate": "48000",
+            "channels": 2
+          }
+        ],
+        "format": {
+          "duration": "60.000000"
+        }
+      }
+    },
+    {
+      "file": "preview\\sfx_demo.mp3",
+      "passed": true,
+      "info": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "mp3",
+            "sample_rate": "48000",
+            "channels": 1
+          }
+        ],
+        "format": {
+          "duration": "27.600000"
+        }
+      }
+    }
+  ],
+  "music_loudness": {
+    "input_i": "-17.86",
+    "input_tp": "-5.99",
+    "input_lra": "2.80",
+    "input_thresh": "-27.86",
+    "output_i": "-17.93",
+    "output_tp": "-6.05",
+    "output_lra": "2.80",
+    "output_thresh": "-27.93",
+    "normalization_type": "dynamic",
+    "target_offset": "-0.07"
+  },
+  "listening_review": "Subjective listening not performed; please audition the sample before integration."
+}

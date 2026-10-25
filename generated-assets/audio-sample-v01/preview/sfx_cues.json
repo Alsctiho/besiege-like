@@ -1,0 +1,37 @@
+[
+  {
+    "start_seconds": 0.0,
+    "end_seconds": 4.0,
+    "title": "旋翼：启动 → 循环 → 停止"
+  },
+  {
+    "start_seconds": 4.0,
+    "end_seconds": 6.8,
+    "title": "吹风机：持续气流"
+  },
+  {
+    "start_seconds": 6.8,
+    "end_seconds": 9.9,
+    "title": "喷气：点火 → 持续 → 泄压"
+  },
+  {
+    "start_seconds": 9.9,
+    "end_seconds": 15.0,
+    "title": "钻岩：电机 → 接触 → 石头崩解"
+  },
+  {
+    "start_seconds": 15.0,
+    "end_seconds": 19.1,
+    "title": "轮胎：滚动 → 打滑 → 落地"
+  },
+  {
+    "start_seconds": 19.1,
+    "end_seconds": 22.8,
+    "title": "交互：拾取 → 安装 → 卸下 → 点击"
+  },
+  {
+    "start_seconds": 22.8,
+    "end_seconds": 27.6,
+    "title": "升桥：启动 → 运转 → 到位"
+  }
+]
