@@ -17,9 +17,11 @@ project.godot.bak
 **/__pycache__/
 *.py[cod]
 
-# 本机工具配置与商业 MCP 插件不随仓库分发
+# 本机工具配置不入库；商业 MCP 插件仅在个人私有仓库备份
 /.vscode/settings.json
-/addons/godot_mcp/
+/addons/godot_mcp/**/.env*
+/addons/godot_mcp/**/license_key*
+/addons/godot_mcp/**/*.log
 
 # 日志、下载分镜与生成中间稿；保留导入隔离标记
 /logs/*

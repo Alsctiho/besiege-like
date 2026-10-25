@@ -19,7 +19,7 @@
 
 ### 本机开发依赖
 
-`addons/godot_mcp/` 是禁止再分发的 Godot MCP Pro 本机插件，未纳入仓库；本机 IDE 路径配置、日志和大体积验收录像也不入库。项目配置保留当前开发环境的插件和三个 MCP Autoload 引用。新机器需自行安装有授权的插件；若只运行游戏、不使用 MCP，应在项目设置移除 `MCPScreenshot`、`MCPInputService`、`MCPGameInspector` 三个 Autoload，并禁用该编辑器插件。游戏本体不依赖它们。
+`addons/godot_mcp/` 是 Godot MCP Pro 1.5.3 商业插件，仅作为拥有者个人私有仓库备份纳入，保留原始 `LICENSE`；它不属于本项目可再分发源码。禁止向他人共享插件或许可证密钥。以后公开或共享仓库前，需先移除插件及其 Git 历史，或获得作者许可。本机 IDE 路径配置、密钥、日志和大体积验收录像仍不入库。项目配置保留插件和三个 MCP Autoload 引用；在自己的新机器上可按已有授权使用。若只运行游戏、不使用 MCP，应在项目设置移除 `MCPScreenshot`、`MCPInputService`、`MCPGameInspector` 三个 Autoload，并禁用该编辑器插件。游戏本体不依赖它们。
 
 以下为保留的旧沙盒功能说明：
 
